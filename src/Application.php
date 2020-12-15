@@ -123,9 +123,15 @@ class Application extends BaseApplication
                 IdentifierInterface::CREDENTIAL_PASSWORD => 'password',
             ]
         ]);
+        $service->loadIdentifier('Authentication.Token');
 
         // Load the authenticators, you want session first
         $service->loadAuthenticator('Authentication.Session');
+        $service->loadAuthenticator('Authentication.Token', [
+            'queryParam' => 'token',
+            'header' => 'Authorization',
+            'tokenPrefix' => 'Token'
+        ]);
         $service->loadAuthenticator('Authentication.Form', [
             'loginUrl' => '/users/login',
             'fields' => [

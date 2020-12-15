@@ -164,4 +164,15 @@ class UsersController extends AppController
             return $this->redirect('/');
         }
     }
+
+    /**
+     * Test it with
+     * curl -H 'Authorization: Token 1234' -H 'Accept: application/json' http://localhost:8765/users/my
+     */
+    public function my()
+    {
+        $user = $this->Authentication->getIdentity()->getOriginalData();
+        $this->set(compact('user'));
+        $this->viewBuilder()->setOption('serialize', 'user');
+    }
 }
