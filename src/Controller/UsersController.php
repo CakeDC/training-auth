@@ -170,6 +170,7 @@ class UsersController extends AppController
      */
     public function my()
     {
+        $this->Authorization->skipAuthorization();
         $user = $this->Authentication->getIdentity()->getOriginalData();
         $this->set(compact('user'));
         $this->viewBuilder()->setOption('serialize', 'user');
