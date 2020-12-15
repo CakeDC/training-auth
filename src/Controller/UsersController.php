@@ -28,10 +28,10 @@ class UsersController extends AppController
      */
     public function index()
     {
-        $this->paginate = [
-            'contain' => ['Groups'],
-        ];
-        $users = $this->paginate($this->Users);
+        $query = $this->Users->find()
+            ->contain(['Groups']);
+        $this->Authorization->authorize($query);
+        $users = $this->paginate($this->Authorization->applyScope($query));
 
         $this->set(compact('users'));
     }
@@ -48,6 +48,7 @@ class UsersController extends AppController
         $user = $this->Users->get($id, [
             'contain' => ['Groups', 'MailingLists', 'Logs'],
         ]);
+        $this->Authorization->authorize($user);
 
         $this->set(compact('user'));
     }
@@ -60,6 +61,7 @@ class UsersController extends AppController
     public function add()
     {
         $user = $this->Users->newEmptyEntity();
+        $this->Authorization->authorize($user);
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->getData());
             if ($this->Users->save($user)) {
@@ -86,6 +88,8 @@ class UsersController extends AppController
         $user = $this->Users->get($id, [
             'contain' => ['MailingLists'],
         ]);
+        $this->Authorization->authorize($user);
+
         if ($this->request->is(['patch', 'post', 'put'])) {
             $user = $this->Users->patchEntity($user, $this->request->getData());
             if ($this->Users->save($user)) {
@@ -98,6 +102,7 @@ class UsersController extends AppController
         $groups = $this->Users->Groups->find('list', ['limit' => 200]);
         $mailingLists = $this->Users->MailingLists->find('list', ['limit' => 200]);
         $this->set(compact('user', 'groups', 'mailingLists'));
+        $this->viewBuilder()->setOption('serialize', 'user');
     }
 
     /**
@@ -111,6 +116,7 @@ class UsersController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
         $user = $this->Users->get($id);
+        $this->Authorization->authorize($user);
         if ($this->Users->delete($user)) {
             $this->Flash->success(__('The user has been deleted.'));
         } else {
@@ -123,6 +129,7 @@ class UsersController extends AppController
     public function login()
     {
         $this->request->allowMethod(['get', 'post']);
+        $this->Authorization->skipAuthorization();
         if ($this->request->is('post')) {
             Log::debug('Login attempt for user ' . $this->request->getData('username'));
         }
@@ -155,6 +162,7 @@ class UsersController extends AppController
 
     public function logout()
     {
+        $this->Authorization->skipAuthorization();
         $result = $this->Authentication->getResult();
         // regardless of POST or GET, redirect if user is logged in
         if ($result->isValid()) {
