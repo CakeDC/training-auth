@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace App;
 
 use Authentication\AuthenticationService;
-use Authentication\AuthenticationServiceInterface;
 use Authentication\Identifier\IdentifierInterface;
 use Authentication\Middleware\AuthenticationMiddleware;
 use Cake\Core\Configure;
@@ -121,7 +120,7 @@ class Application extends BaseApplication
             'fields' => [
                 IdentifierInterface::CREDENTIAL_USERNAME => 'email',
                 IdentifierInterface::CREDENTIAL_PASSWORD => 'password',
-            ]
+            ],
         ]);
         $service->loadIdentifier('Authentication.Token');
 
@@ -130,7 +129,7 @@ class Application extends BaseApplication
         $service->loadAuthenticator('Authentication.Token', [
             'queryParam' => 'token',
             'header' => 'Authorization',
-            'tokenPrefix' => 'Token'
+            'tokenPrefix' => 'Token',
         ]);
         $service->loadAuthenticator('Authentication.Form', [
             'loginUrl' => '/users/login',

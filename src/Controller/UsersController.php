@@ -5,7 +5,6 @@ namespace App\Controller;
 
 use Cake\Event\EventInterface;
 use Cake\Log\Log;
-use Cake\View\JsonView;
 
 /**
  * Users Controller
