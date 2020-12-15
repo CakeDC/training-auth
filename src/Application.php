@@ -19,6 +19,9 @@ namespace App;
 use Authentication\AuthenticationService;
 use Authentication\Identifier\IdentifierInterface;
 use Authentication\Middleware\AuthenticationMiddleware;
+use Authorization\AuthorizationService;
+use Authorization\Middleware\AuthorizationMiddleware;
+use Authorization\Policy\OrmResolver;
 use Cake\Core\Configure;
 use Cake\Core\Exception\MissingPluginException;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
@@ -99,7 +102,8 @@ class Application extends BaseApplication
             ->add(new CsrfProtectionMiddleware([
                 'httponly' => true,
             ]))
-            ->add(new AuthenticationMiddleware($this->getAuthService()));
+            ->add(new AuthenticationMiddleware($this->getAuthService()))
+            ->add(new AuthorizationMiddleware($this->getAuthorizationService()));
 
         return $middlewareQueue;
     }
@@ -160,5 +164,10 @@ class Application extends BaseApplication
         $this->addPlugin('Migrations');
 
         // Load more plugins here
+    }
+
+    protected function getAuthorizationService(): AuthorizationService
+    {
+        return new AuthorizationService(new OrmResolver());
     }
 }
