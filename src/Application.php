@@ -14,6 +14,7 @@ declare(strict_types=1);
  * @since     3.3.0
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App;
 
 use Authentication\AuthenticationService;
@@ -21,7 +22,10 @@ use Authentication\Identifier\IdentifierInterface;
 use Authentication\Middleware\AuthenticationMiddleware;
 use Authorization\AuthorizationService;
 use Authorization\Middleware\AuthorizationMiddleware;
+use Authorization\Middleware\RequestAuthorizationMiddleware;
+use Authorization\Policy\MapResolver;
 use Authorization\Policy\OrmResolver;
+use Authorization\Policy\ResolverCollection;
 use Cake\Core\Configure;
 use Cake\Core\Exception\MissingPluginException;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
@@ -29,8 +33,12 @@ use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
+use Cake\Http\ServerRequest;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
+use CakeDC\Auth\Middleware\RbacMiddleware;
+use CakeDC\Auth\Policy\RbacPolicy;
+use CakeDC\Auth\Rbac\Rbac;
 
 /**
  * Application setup class.
@@ -104,7 +112,8 @@ class Application extends BaseApplication
                 'httponly' => true,
             ]))
             ->add(new AuthenticationMiddleware($this->getAuthService()))
-            ->add(new AuthorizationMiddleware($this->getAuthorizationService()));
+            ->add(new AuthorizationMiddleware($this->getAuthorizationService()))
+            ->add(new RequestAuthorizationMiddleware());
 
         return $middlewareQueue;
     }
@@ -169,6 +178,59 @@ class Application extends BaseApplication
 
     protected function getAuthorizationService(): AuthorizationService
     {
-        return new AuthorizationService(new OrmResolver());
+        $map = new MapResolver();
+        $map->map(
+            ServerRequest::class,
+            new RbacPolicy([
+                'adapter' => [
+                    'permissions' => [
+                        // array of rules, usually loaded from configuration file
+                        [
+                            'role' => '*',
+                            'prefix' => '*',
+                            'extension' => '*',
+                            'plugin' => 'DebugKit',
+                            'controller' => '*',
+                            'action' => '*',
+                            'bypassAuth' => true,
+                        ],
+                        [
+                            'role' => '*',
+                            'prefix' => '*',
+                            'extension' => '*',
+                            'plugin' => null,
+                            'controller' => 'Pages',
+                            'action' => 'display',
+                            'bypassAuth' => true,
+                        ],
+                        [
+                            'role' => '*',
+                            'prefix' => '*',
+                            'extension' => '*',
+                            'plugin' => null,
+                            'controller' => 'Users',
+                            'action' => ['login', 'logout'],
+                            'bypassAuth' => true,
+                        ],
+                        [
+                            'role' => '*',
+                            'prefix' => '*',
+                            'extension' => '*',
+                            'plugin' => null,
+                            'controller' => '*',
+                            'action' => '*',
+                        ],
+                    ],
+                ],
+            ])
+        );
+        $orm = new OrmResolver();
+
+        $resolver = new ResolverCollection([
+            $map,
+            $orm,
+        ]);
+
+        return new AuthorizationService($resolver);
     }
 }
