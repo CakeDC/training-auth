@@ -36,9 +36,7 @@ use Cake\Http\MiddlewareQueue;
 use Cake\Http\ServerRequest;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
-use CakeDC\Auth\Middleware\RbacMiddleware;
 use CakeDC\Auth\Policy\RbacPolicy;
-use CakeDC\Auth\Rbac\Rbac;
 
 /**
  * Application setup class.
